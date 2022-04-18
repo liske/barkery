@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+
+# barkerpy - digital signage based on WebKit2
+#
+# Authors:
+#   Thomas Liske <thomas@fiasko-nw.net>
+#
+# Copyright Holder:
+#   2015 - 2022 (C) Thomas Liske [http://fiasko-nw.net/~thomas/]
+#
+# License:
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this package; if not, write to the Free Software
+#   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+#
+
+import configparser
+import gi
+from setproctitle import setproctitle
+import sys
+from paho.mqtt import client as mqtt_client
+
+# load Gtk3 & Gdk
+gi.require_version('Gtk', '3.0')
+
+# load Webkit2
+gi.require_version('WebKit2', '4.0')
+
+from gi.repository import WebKit2
+from gi.repository import Gdk
+from gi.repository import Gtk
+
+
+class Barkery():
+    def __init__(self):
+        self.init_webkit()
+        self.connect_mqtt()
+
+    def connect_mqtt(self):
+        def on_connect(client, userdata, flags, rc):
+            if rc == 0:
+                print("MQTT: connected")
+            else:
+                print("MQTT: failed to connect ({})".format(rc))
+
+        def on_disconnect(client, userdata, rc):
+            print("MQTT: disconnected ({})".format(rc))
+
+        self.client = mqtt_client.Client()
+        self.client.on_connect = on_connect
+        self.client.on_disconnect = on_disconnect
+        self.client.connect('localhost', 1883)
+
+    def init_webkit(self):
+        def window_destroyed(obj):
+            '''terminate barkery if the window is destroyed'''
+            Gtk.main_quit()
+
+        Gtk.init(sys.argv)
+
+        screen = Gdk.Screen.get_default()
+        window = Gtk.Window.new(Gtk.WindowType.TOPLEVEL)
+        monitor = screen.get_display().get_monitor_at_window(screen.get_root_window())
+        geometry = monitor.get_geometry()
+        window.set_role('browser')
+        window.set_title("Barkery")
+        window.set_icon_name('text-html')
+        window.set_default_size(geometry.width, geometry.height)
+
+        scrolls = Gtk.ScrolledWindow.new()
+        self.view = WebKit2.WebView.new()
+        scrolls.add(self.view)
+
+        window.add(scrolls)
+        window.show_all()
+        window.present()
+        window.connect('destroy', window_destroyed)
+
+        # load initial site
+        self.view.load_uri("http://google.de/")
+
+        # give view focus to enable scrolling by keyboard
+        self.view.grab_focus()
+
+    def main(self):
+        print("starting Gtk main loop...")
+        Gtk.main()
+
+if __name__ == '__main__':
+    Barkery().main()  
