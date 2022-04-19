@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# barkerpy - digital signage based on WebKit2
+# barkery - digital signage based on WebKit2
 #
 # Authors:
 #   Thomas Liske <thomas@fiasko-nw.net>
@@ -24,11 +24,14 @@
 #   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 #
 
+import argparse
 import configparser
 import gi
 from setproctitle import setproctitle
 import sys
+import os
 from paho.mqtt import client as mqtt_client
+import platform
 
 # load Gtk3 & Gdk
 gi.require_version('Gtk', '3.0')
@@ -42,29 +45,100 @@ from gi.repository import Gtk
 
 
 class Barkery():
-    def __init__(self):
+    def __init__(self, config_file=None):
+        self.config = configparser.ConfigParser()
+        if config_file:
+            self.config.read_file(config_file)
+
         self.init_webkit()
-        self.connect_mqtt()
+        if self.config.getboolean('mqtt', 'enabled', fallback=True):
+            self.connect_mqtt()
 
     def connect_mqtt(self):
+        '''connect and subscribe to MQTT'''
+
         def on_connect(client, userdata, flags, rc):
             if rc == 0:
                 print("MQTT: connected")
+
+                for sub, callback in self.topics_subscribe.items():
+                    print(f"MQTT: subscribe for {sub}")
+                    client.message_callback_add(sub, callback)
+                    client.subscribe(sub)
             else:
                 print("MQTT: failed to connect ({})".format(rc))
 
         def on_disconnect(client, userdata, rc):
             print("MQTT: disconnected ({})".format(rc))
 
+        def on_log(client, userdata, level, buf):
+            print("MQTT: {}".format(buf))
+
+
+        def cmd_load(client, userdata, msg):
+            self.view.load_uri(msg.payload.decode('utf-8'))
+
+        def cmd_reset(client, userdata, msg):
+            self.view.load_uri(self.start_uri)
+
+        def cmd_screenshot(client, userdata, msg):
+            pass
+
+        def cmd_sendkeys(client, userdata, msg):
+            pass
+
+        hostname = os.getenv('HOSTNAME', platform.node()).split('.')[0]
+        self.topics_publish = {
+            'status': self.config.get('mqtt', 'topic_status', fallback=f'barkery/terminal/{hostname}/status'),
+            'screenshot': self.config.get('mqtt', 'topic_screenshot', fallback=f'barkery/terminal/{hostname}/screenshot'),
+        }
+        topic_ucast = self.config.get('mqtt', 'topic_ucast_cmd', fallback=f'barkery/terminal/{hostname}/cmd')
+        topic_bcast = self.config.get('mqtt', 'topic_bcast_cmd', fallback='barkery/terminal/_bcast/cmd')
+        self.topics_subscribe = {
+            f'{topic_ucast}/load': cmd_load,
+            f'{topic_bcast}/load': cmd_load,
+
+            f'{topic_ucast}/reset': cmd_reset,
+            f'{topic_bcast}/reset': cmd_reset,
+
+            f'{topic_ucast}/sendkeys': cmd_sendkeys,
+            f'{topic_bcast}/sendkeys': cmd_sendkeys,
+
+            f'{topic_ucast}/screenshot': cmd_screenshot,
+            f'{topic_bcast}/screenshot': cmd_screenshot,
+        }
+
         self.client = mqtt_client.Client()
         self.client.on_connect = on_connect
         self.client.on_disconnect = on_disconnect
-        self.client.connect('localhost', 1883)
+        self.client.on_log = on_log
+        if self.config.get('mqtt', 'username', fallback=None):
+            self.client.username_pw_set(
+                self.config.get('mqtt', 'username'),
+                self.config.get('mqtt', 'password', fallback=None))
+        self.client.connect_async(
+            self.config.get('mqtt', 'host', fallback='localhost'),
+            self.config.getint('mqtt', 'port', fallback=1884))
+        self.client.loop_start()
 
     def init_webkit(self):
+        '''initialize and present main window and webview'''
+
         def window_destroyed(obj):
             '''terminate barkery if the window is destroyed'''
             Gtk.main_quit()
+
+        def view_changed(view, event):
+            if event == WebKit2.LoadEvent.FINISHED:
+                print(f"WebKit: view changed to {view.get_uri()}")
+
+        def view_failed(view, event, uri, error):
+            print(f"WebKit: failed to load {uri} due to {error}")
+        
+        def view_crashed(view):
+            print('WebKit: web process crashed')
+            self.view.load_uri(self.start_uri)
+
 
         Gtk.init(sys.argv)
 
@@ -86,15 +160,32 @@ class Barkery():
         window.present()
         window.connect('destroy', window_destroyed)
 
+        # register WebView callbacks
+        self.view.connect('load-changed', view_changed)
+        self.view.connect('load-failed', view_failed)
+        self.view.connect('web-process-crashed', view_crashed)
+
         # load initial site
-        self.view.load_uri("http://google.de/")
+        self.start_uri = self.config.get(
+            'brower', 'start_uri', fallback='http://localhost')
+        self.view.load_uri(self.start_uri)
 
         # give view focus to enable scrolling by keyboard
         self.view.grab_focus()
 
     def main(self):
+        '''start Gtk main loop (blocking)'''
+
         print("starting Gtk main loop...")
         Gtk.main()
 
+
 if __name__ == '__main__':
-    Barkery().main()  
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", type=str, default="/etc/barkery.conf",
+                    help="configuration file")
+    args = parser.parse_args()
+
+    with open(args.config, 'r') as f:
+        barkery = Barkery(config_file=f)
+    barkery.main()

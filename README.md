@@ -1,4 +1,4 @@
-# barkerpy - digital signage based on WebKit2
+# barkery - digital signage based on WebKit2
 
 This is project provides a *WebKit2* bases kiosk browser to be used for digital signage. It has a *MQTT* interface for remote management.
 
@@ -48,7 +48,6 @@ has been transcribed to:
 ```python
 screen = Gdk.Screen.get_default()
 window = Gtk.Window.new(Gtk.WindowType.TOPLEVEL)
-window.set_wmclass('barkerpy-terminal', 'Barkerpy Terminal')
 window.set_role('browser')
 window.set_icon_name('text-html')
 window.set_default_size(screen.get_width(), screen.get_height())
