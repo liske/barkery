@@ -32,6 +32,10 @@ import sys
 import os
 from paho.mqtt import client as mqtt_client
 import platform
+import time
+
+# set process title
+setproctitle("barkery-terminal")
 
 # load Gtk3 & Gdk
 gi.require_version('Gtk', '3.0')
@@ -137,6 +141,7 @@ class Barkery():
         
         def view_crashed(view):
             print('WebKit: web process crashed')
+            time.sleep(5)
             self.view.load_uri(self.start_uri)
 
 
