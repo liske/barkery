@@ -167,7 +167,7 @@ class Barkery():
 
         # load initial site
         self.start_uri = self.config.get(
-            'brower', 'start_uri', fallback='http://localhost')
+            'browser', 'start_uri', fallback='http://localhost')
         self.view.load_uri(self.start_uri)
 
         # give view focus to enable scrolling by keyboard
