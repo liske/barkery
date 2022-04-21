@@ -27,6 +27,7 @@
 import argparse
 import configparser
 import gi
+import json
 from setproctitle import setproctitle
 import sys
 import os
@@ -54,9 +55,31 @@ class Barkery():
         if config_file:
             self.config.read_file(config_file)
 
+        self.start_uri = self.config.get(
+            'browser', 'start_uri', fallback='http://localhost')
+
+        self.state = {
+            'uri': self.start_uri,
+            'state': 'init',
+            'ts': int(time.time()),
+        }
+
         self.init_webkit()
         if self.config.getboolean('mqtt', 'enabled', fallback=True):
             self.connect_mqtt()
+
+    def publish_state(self, **kwargs):
+        if not hasattr(self, 'client'):
+            return
+
+        self.state['ts'] = int(time.time())
+        for key, value in kwargs.items():
+            self.state[key] = value
+
+        self.client.publish(
+            topic=self.topics_publish['status'],
+            payload=json.dumps(self.state),
+            retain=True)
 
     def connect_mqtt(self):
         '''connect and subscribe to MQTT'''
@@ -69,6 +92,8 @@ class Barkery():
                     print(f"MQTT: subscribe for {sub}")
                     client.message_callback_add(sub, callback)
                     client.subscribe(sub)
+
+                self.publish_state(state='alive')
             else:
                 print("MQTT: failed to connect ({})".format(rc))
 
@@ -85,7 +110,13 @@ class Barkery():
         def cmd_reset(client, userdata, msg):
             self.view.load_uri(self.start_uri)
 
+        def cb_screenshot_finished(view, task):
+            surface = view.get_snapshot_finish(task)
+            # ToDo: publish screenshot via MQTT
+
         def cmd_screenshot(client, userdata, msg):
+            print("huuh")
+            self.view.get_snapshot(WebKit2.SnapshotRegion.VISIBLE, WebKit2.SnapshotOptions.NONE, None, cb_screenshot_finished)
             pass
 
         def cmd_sendkeys(client, userdata, msg):
@@ -116,6 +147,12 @@ class Barkery():
         self.client.on_connect = on_connect
         self.client.on_disconnect = on_disconnect
         self.client.on_log = on_log
+        self.client.will_set(
+            topic=self.topics_publish['status'],
+            payload=json.dumps({
+                'state': 'dead',
+            }),
+            retain=True)
         if self.config.get('mqtt', 'username', fallback=None):
             self.client.username_pw_set(
                 self.config.get('mqtt', 'username'),
@@ -133,6 +170,7 @@ class Barkery():
             Gtk.main_quit()
 
         def view_changed(view, event):
+            self.publish_state(uri=view.get_uri(), load=event)
             if event == WebKit2.LoadEvent.FINISHED:
                 print(f"WebKit: view changed to {view.get_uri()}")
 
@@ -171,8 +209,6 @@ class Barkery():
         self.view.connect('web-process-crashed', view_crashed)
 
         # load initial site
-        self.start_uri = self.config.get(
-            'browser', 'start_uri', fallback='http://localhost')
         self.view.load_uri(self.start_uri)
 
         # give view focus to enable scrolling by keyboard
