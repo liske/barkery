@@ -176,7 +176,7 @@ class Barkery():
 
         def view_failed(view, event, uri, error):
             print(f"WebKit: failed to load {uri} due to {error}")
-        
+
         def view_crashed(view):
             print('WebKit: web process crashed')
             time.sleep(5)
@@ -197,6 +197,9 @@ class Barkery():
         scrolls = Gtk.ScrolledWindow.new()
         self.view = WebKit2.WebView.new()
         scrolls.add(self.view)
+
+        settings = self.view.get_settings()
+        settings.set_property('enable-write-console-messages-to-stdout', True)
 
         window.add(scrolls)
         window.show_all()
