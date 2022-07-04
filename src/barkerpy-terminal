@@ -64,7 +64,8 @@ class Barkery():
             'ts': int(time.time()),
         }
 
-        self.init_webkit()
+        preferred_languages = self.config.get('browser', 'preferred_languages', fallback='en-US').split(',')
+        self.init_webkit(preferred_languages)
         if self.config.getboolean('mqtt', 'enabled', fallback=True):
             self.connect_mqtt()
 
@@ -162,7 +163,7 @@ class Barkery():
             self.config.getint('mqtt', 'port', fallback=1884))
         self.client.loop_start()
 
-    def init_webkit(self):
+    def init_webkit(self, preferred_languages):
         '''initialize and present main window and webview'''
 
         def window_destroyed(obj):
@@ -200,6 +201,9 @@ class Barkery():
 
         settings = self.view.get_settings()
         settings.set_property('enable-write-console-messages-to-stdout', True)
+
+        context = WebKit2.WebContext.get_default()
+        context.set_preferred_languages(preferred_languages)
 
         window.add(scrolls)
         window.show_all()
