@@ -36,7 +36,7 @@ import platform
 import time
 
 # set process title
-setproctitle("barkery-terminal")
+setproctitle("barkery")
 
 # load Gtk3 & Gdk
 gi.require_version('Gtk', '3.0')
@@ -116,11 +116,10 @@ class Barkery():
             # ToDo: publish screenshot via MQTT
 
         def cmd_screenshot(client, userdata, msg):
-            print("huuh")
             self.view.get_snapshot(WebKit2.SnapshotRegion.VISIBLE, WebKit2.SnapshotOptions.NONE, None, cb_screenshot_finished)
-            pass
 
         def cmd_sendkeys(client, userdata, msg):
+            # ToDo: implement sendkeys
             pass
 
         hostname = os.getenv('HOSTNAME', platform.node()).split('.')[0]

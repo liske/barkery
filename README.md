@@ -12,56 +12,32 @@ It is implemented in *Python3* and uses *Glib GObject Introspection* for the *Gt
   - *WebKit2*
 - *Paho MQTT*
 
-## History
+## Configuration
 
-This is the successor of *barkery* reimplemented in *Python3*. *Barkery* has used the same approach but was implemented in *Perl5* and never published. *Barkery* was used on *Raspbian Lite* with read-only root.
+The configuration file is loaded from `/etc/barkery.conf`. Look at the [example config file](ex/bakery.conf) for available options.
 
-Switching to *Alpine Linux* using *barkery* was not possible since there are missing some *Perl5* bindings. Since *Gtk* and *WebKit2* is integrated via *Glib GObject Introspection* it was more easy to port the project to *Python3* than I did expect.
+## Features
 
-For example the old *Perl5* code:
+### CEC
 
-```perl
-my $screen = Gdk3::Screen::get_default();
+*Barkery* can issue HDMI CEC commands if CEC enabled hardware supported by *cec-client* is available. A CEC commands can be run on startup and via MQTT remote control.
 
-my $window = Gtk3::Window->new('toplevel');
-$window->set_wmclass('barkery-terminal', 'Barkery Terminal');
-$window->set_role('browser');
-$window->set_icon_name('text-html');
-$window->set_default_size($screen->get_width, $screen->get_height);
 
-my $scrolls = Gtk3::ScrolledWindow->new;
-my $view = WebKit::WebView->new;
-$scrolls->add($view);
+### MQTT
 
-$window->add($scrolls);
-$window->show_all;
-$window->present;
+*Barkery* can be configured to connect to a MQTT broker. It subscribes to the configured MQTT topics and performs defined actions when a message is published.
 
-# ...
+Topics:
 
-# main loop
-Gtk3::main();
-```
+- `barkery/terminal/{hostname}/load`
+  `barkery/terminal/_bcast/cmd/load`
 
-has been transcribed to:
+- `barkery/terminal/{hostname}/reset`
+  `barkery/terminal/_bcast/cmd/reset`
 
-```python
-screen = Gdk.Screen.get_default()
-window = Gtk.Window.new(Gtk.WindowType.TOPLEVEL)
-window.set_role('browser')
-window.set_icon_name('text-html')
-window.set_default_size(screen.get_width(), screen.get_height())
+- `barkery/terminal/{hostname}/sendkeys`
+  `barkery/terminal/_bcast/cmd/sendkeys`
 
-scrolls = Gtk.ScrolledWindow.new()
-view = WebKit2.WebView.new()
-scrolls.add(view)
+- `barkery/terminal/{hostname}/screenshot`
+  `barkery/terminal/_bcast/cmd/screenshot`
 
-window.add(scrolls)
-window.show_all()
-window.present()
-
-# ...
-
-# main loop
-Gtk.main()
-```
