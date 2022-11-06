@@ -14,7 +14,7 @@ It is implemented in *Python3* and uses *Glib GObject Introspection* to use *Gtk
 
 ## Configuration
 
-The configuration file is loaded from `/etc/barkery.conf`. Look at the [example config file](ex/bakery.conf) for available options.
+The configuration file is loaded from `/etc/barkery/barkery.conf`. Look at the [example config file](ex/bakery.conf) for available options.
 
 ## Features
 
