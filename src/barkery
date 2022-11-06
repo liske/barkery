@@ -200,6 +200,7 @@ class Barkery():
 
         settings = self.view.get_settings()
         settings.set_property('enable-write-console-messages-to-stdout', True)
+        settings.set_property('enable-fullscreen', False)
 
         context = WebKit2.WebContext.get_default()
         context.set_preferred_languages(preferred_languages)
