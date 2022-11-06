@@ -208,6 +208,7 @@ class Barkery():
         window.show_all()
         window.present()
         window.connect('destroy', window_destroyed)
+        window.fullscreen()
 
         # register WebView callbacks
         self.view.connect('load-changed', view_changed)
