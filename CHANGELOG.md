@@ -1,5 +1,11 @@
 # ChangeLog
 
+## 0.6.1 - 2022-11-06
+
+Fixes:
+- fix filename of `ex/barkery.conf` example config
+- improve `ex/weston.ini` example config
+
 ## 0.6.0 - 2022-11-06
 
 Changes:
