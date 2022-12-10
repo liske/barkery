@@ -12,6 +12,16 @@ It is implemented in *Python3* and uses *Glib GObject Introspection* to use *Gtk
   - *WebKit2*
 - *Paho MQTT*
 
+## Installation
+
+*Barkery* is available in the following linux distributions:
+
+- [Alpine Linux](docs/Alpine.md)
+
+On other platforms you could install it's [python dependencies](requirements.txt) using the package manager (*apt-get* et. al.) or using *pip3*. *Barkery* is a single python script which can be run if the requirements are met, no special installation is needed.
+
+*Merge requests with instructions for other Linux distributions are very welcome.*
+
 ## Configuration
 
 The configuration file is loaded from `/etc/barkery/barkery.conf`. Look at the [example config file](ex/barkery.conf) for available options.
