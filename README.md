@@ -18,7 +18,7 @@ It is implemented in *Python3* and uses *Glib GObject Introspection* to use *Gtk
 
 - [Alpine Linux](docs/Alpine.md)
 
-On other platforms you could install it's [python dependencies](requirements.txt) using the package manager (*apt-get* et. al.) or using *pip3*. *Barkery* is a single python script which can be run if the requirements are met, no special installation is needed.
+On other platforms you could install it's [python dependencies](requirements.txt) using the package manager (i.e. *apt-get*) or using *pip3*. *Barkery* is a single python script which can be run without any special installation if the dependencies are met.
 
 *Merge requests with instructions for other Linux distributions are very welcome.*
 

@@ -1,6 +1,8 @@
 # Alpine Linux
 
-## Alpine ≥ 3.18.0
+## Installation
+
+### Alpine ≥ 3.18.0
 
 *Barkery* will be available in the *community* repository since *Alpine 3.18.0*. The following packages are available:
 
@@ -9,7 +11,7 @@
 - `barkery-weston`: startup script using [weston](https://gitlab.freedesktop.org/wayland/weston/)
 
 
-## Alpine <3.18.0
+### Alpine <3.18.0
 
 Since *barkery* is a simple python script it is save to barkery from *edge* using [repository pinning](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper#Repository_pinning). You need to at *edge* to you repository sources:
 
@@ -23,3 +25,28 @@ Since *barkery* is a simple python script it is save to barkery from *edge* usin
   ```python
   rpi [~]# apk add barkery@edgecom
   ```
+
+
+## Configuration
+
+The following configuration files exists:
+
+- [`/etc/barkery/barkery.conf`](ex/barkery.conf)
+- [`/etc/barkery/weston.ini`](ex/weston.ini)
+
+
+## Run
+
+Use `rc-update` to enable `barkery` on boot:
+
+```python
+rpi [~]# rc-update add barkery-weston
+ * service barkery-weston added to runlevel default
+```
+
+Use `rc-service` to launch `barkery` manually:
+
+```python
+rpi [~]# rc-service barkery-weston start
+ * Starting barkery-weston ...
+```
