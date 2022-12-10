@@ -31,20 +31,20 @@ Since *barkery* is a simple python script it is save to barkery from *edge* usin
 
 The following configuration files exists:
 
-- [`/etc/barkery/barkery.conf`](ex/barkery.conf)
-- [`/etc/barkery/weston.ini`](ex/weston.ini)
+- [`/etc/barkery/barkery.conf`](../ex/barkery.conf)
+- [`/etc/barkery/weston.ini`](../ex/weston.ini)
 
 
 ## Run
 
-Use `rc-update` to enable `barkery` on boot:
+Use `rc-update` to enable *barkery* on boot:
 
 ```python
 rpi [~]# rc-update add barkery-weston
  * service barkery-weston added to runlevel default
 ```
 
-Use `rc-service` to launch `barkery` manually:
+Use `rc-service` to launch *barkery* manually:
 
 ```python
 rpi [~]# rc-service barkery-weston start
