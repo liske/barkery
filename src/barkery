@@ -42,7 +42,7 @@ setproctitle("barkery")
 gi.require_version('Gtk', '3.0')
 
 # load Webkit2
-gi.require_version('WebKit2', '4.0')
+gi.require_version('WebKit2', '4.1')
 
 from gi.repository import WebKit2
 from gi.repository import Gdk

@@ -9,7 +9,7 @@ It is implemented in *Python3* and uses *Glib GObject Introspection* to use *Gtk
 - *Python3*
 - *Glib GObject Introspection*
   - *Gtk3*
-  - *WebKit2*
+  - *WebKit2Gtk-4.1*
 - *Paho MQTT*
 
 ## Installation
